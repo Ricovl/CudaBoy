@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include "state.hpp"
+#include "lcd_ctrl.hpp"
 #include "config.hpp"
 
 
@@ -40,17 +41,13 @@ static uint8_t read_u8(state_t &s, _reg16_t ptr) {
     }
 #endif
 
-    if (ptr == 0xff44) {
-        return 0x90;
-    }
-
-    
     switch (ptr)
     {
-    case 0xff40: // LCDC (lcd control register)
-
+    case LY: // LCDC (lcd control register)
+        return s.lcd.ly;
+        // return 0x90;
         break;
-    
+
     default:
         break;
     }
@@ -71,6 +68,9 @@ static void write_u8(state_t &s, _reg16_t ptr, uint8_t n) {
             printf("%c", c);
             n = 0;
         }
+        break;
+    case LCDC:
+        lcd_control_set(s, n);
         break;
 
     default:

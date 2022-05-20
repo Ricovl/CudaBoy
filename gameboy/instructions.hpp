@@ -8,7 +8,7 @@
 
 typedef void InstFun(state_t &s);
 
-typedef struct instruction_t {
+struct instruction_t {
     char const *name;
     uint8_t length;
     uint8_t cycles;

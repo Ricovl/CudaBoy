@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fstream>
+#include <cstdio>
 
 #define ROM_ENTRY_OFFSET    0x100
 #define ROM_TITLE_OFFSET    0x134
@@ -9,10 +10,11 @@
 #define ROM_RAM_SIZE_OFFSET 0x149
 
 int load_rom(uint8_t **buf) {
-    std::ifstream file("/home/rico/Documents/gameboy/games/01-special.gb");
+    // std::ifstream file("/home/rico/Documents/gameboy/games/03-op sp,hl.gb");
+    std::ifstream file("/home/rico/Documents/gameboy/games/10-bitops.gb");
 
     if (!file) {
-        std::cout << "Error opening rom file" << "\n";
+        printf("Error opening rom file!\n");
         return -1;
     }
 
@@ -20,7 +22,7 @@ int load_rom(uint8_t **buf) {
     int length = file.tellg();
     file.seekg (0, file.beg);
 
-    std::cout << "rom size: " << length << "\n";
+    printf("rom size: %d\n", length);
 
     char *buffer = (char*)malloc(length);
     file.read(buffer, length);
@@ -30,9 +32,9 @@ int load_rom(uint8_t **buf) {
     unsigned cartridge_rom_size = (1<<15) << buffer[ROM_ROM_SIZE_OFFSET];
     unsigned cartridge_ram_size = buffer[ROM_RAM_SIZE_OFFSET];
 
-    std::cout << "cartridge title: " << rom_title << "\n";
-    std::cout << "cartridge rom size: " << cartridge_rom_size << "\n";
-    std::cout << "cartridge ram size: " << cartridge_ram_size << "\n";
+    printf("cartridge title: %s\n", rom_title);
+    printf("cartridge rom size: %04x\n", cartridge_rom_size);
+    printf("cartridge ram size: %04x\n", cartridge_ram_size);
 
     *buf = (uint8_t*)buffer;
     file.close();

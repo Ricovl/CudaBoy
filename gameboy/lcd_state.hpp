@@ -1,6 +1,6 @@
 #pragma once
 
-#include "state.hpp"
+#include <cstdio>
 
 enum
 {
@@ -10,7 +10,7 @@ enum
     OAMRAM = 3,
 };
 
-typedef struct lcd_t {
+struct lcd_t {
 
     struct {
         uint8_t lcd_enable : 1;
@@ -27,26 +27,11 @@ typedef struct lcd_t {
         uint8_t bg_enable : 1;
     };
 
+    uint16_t win_tilemap_addr;
+    uint16_t bg_tilemap_addr;
+    uint16_t bg_tiledata_addr;
+
     uint8_t mode;
     unsigned cycles;
+    uint8_t ly;
 };
-
-static void lcd_cycle(state_t&s) {
-
-    switch (s.lcd.mode)
-    {
-    case HBLANK:  // 204 clock cycles
-        break;
-    case OAM:     // 80 clock cycles
-        break;
-    case OAMRAM:  // 172 clock cycles
-        break;
-    case VBLANK:  // 4560 clock cycles
-        break;
-    }
-
-}
-
-static void lcd_init(state_t &s) {
-
-}

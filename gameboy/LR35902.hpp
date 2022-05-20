@@ -5,6 +5,7 @@
 #include "instructions.hpp"
 #include "state.hpp"
 #include "config.hpp"
+#include "lcd_ctrl.hpp"
 
 static void execute() {
     
@@ -46,7 +47,10 @@ static void print_debug(state_t &s) {
 }
 
 static void step(state_t &s) {
-    if (s.inst_cycles_wait <= 21) {
+    lcd_cycle(s);
+
+    if (s.inst_cycles_wait <= 1)
+    {
         _inst_t opcode = read_u8(s, s.pc);
         auto inst = instructions[opcode];
 
@@ -89,3 +93,47 @@ static void step(state_t &s) {
     s.cycles += 1;
 }
 
+static void initialize_state(state_t* &s, uint8_t *rom) {
+    s = (state_t*)malloc(sizeof(state_t));
+
+    memset(&s->regs, 0, sizeof(registers_t));
+
+    s->pc = 0x100;
+#if USE_BOOTROM
+    s->pc = 0;
+#endif
+    s->halt = false;
+    s->stop = false;
+    s->cycles = 0;
+    s->inst_cycles_wait = 0;
+    s->prefixed = false;
+    s->rom_size = (1<<15) << rom[0x0148];
+    s->mem = (uint8_t *)malloc(0x10000);
+    memcpy(s->mem, rom, s->rom_size);
+
+    memset(&s->regs, 0, sizeof(register_t));
+    lcd_init(*s);
+
+    s->regs.af = 0x01b0;
+    s->regs.bc = 0x0013;
+    s->regs.de = 0x00d8;
+    s->regs.hl = 0x014d;
+    s->regs.sp = 0xfffe;
+
+    write_u8(*s, TIMA, 0x00);
+    write_u8(*s, TMA,  0x00);
+    write_u8(*s, TAC,  0x00);
+    write_u8(*s, LCDC, 0x91);
+    write_u8(*s, SCY,  0x00);
+    write_u8(*s, SCX,  0x00);
+    write_u8(*s, LYC,  0x00);
+    write_u8(*s, BGP,  0xfc);
+    write_u8(*s, OBP0, 0xff);
+    write_u8(*s, OBP1, 0xff);
+    write_u8(*s, WY,   0x00);
+    write_u8(*s, WX,   0x00);
+    write_u8(*s, IE,   0x00);
+
+    s->breakp = false;
+    s->num_inst = 0;
+}

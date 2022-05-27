@@ -48,7 +48,7 @@ int main(int argc, const char* argv[])
         if (!gb_state->halt && !wait_refresh) {
             step(*gb_state);
         }
-        if (gb_state->lcd.mode == 2 && prev_lcd_mode == 0) {
+        if (gb_state->lcd.mode == 1 && prev_lcd_mode == 0) {
             wait_refresh = true;
         }
         prev_lcd_mode = gb_state->lcd.mode;

@@ -1,10 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include "state.hpp"
-#include "lcd_ctrl.hpp"
 #include "config.hpp"
-
+#include "lcd_ctrl.hpp"
 
 static unsigned const char bootrom[256] =
     {
@@ -43,13 +41,21 @@ static uint8_t read_u8(state_t &s, _reg16_t ptr) {
 
     switch (ptr)
     {
-    case LY: // LCDC (lcd control register)
-        return s.lcd.ly;
-        // return 0x90;
-        break;
+        case P1:
+            return 0xff;
+        case DIV:
+            return s.divider_counter;
+            break;
+        case TIMA:
+            return s.timer_counter;
+            break;
+        case LY: // LCDC (lcd control register)
+            return s.lcd.ly;
+            // return 0x90;
+            break;
 
-    default:
-        break;
+        default:
+            break;
     }
 
     return s.mem[ptr];
@@ -69,10 +75,29 @@ static void write_u8(state_t &s, _reg16_t ptr, uint8_t n) {
             n = 0;
         }
         break;
+    case DIV:
+        s.divider_counter = 0;
+        n = 0;
+        break;
+    case TAC:
+        s.timer_control = n;
+        break;
     case LCDC:
         lcd_control_set(s, n);
         break;
-
+    case IE:
+        printf("enabling interrupt.. \n");
+        if (n & (1 << 0)) {
+            printf("Vblank ");
+        }
+        if (n & (1 << 1)) {
+            printf("LCD_stat ");
+        }
+        if (n & (1 << 2)) {
+            printf("Timer ");
+        }
+        printf("\n");
+        break;
     default:
         break;
     }

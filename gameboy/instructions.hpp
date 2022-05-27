@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include "LR35902.hpp"
 #include "state.hpp"
 #include "mem.hpp"
 #include "stack.hpp"

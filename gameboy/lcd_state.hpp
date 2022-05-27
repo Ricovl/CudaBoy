@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdio>
+#include "config.hpp"
 
 enum
 {
@@ -34,4 +35,7 @@ struct lcd_t {
     uint8_t mode;
     unsigned cycles;
     uint8_t ly;
+
+    uint8_t vram[144 * 160];
 };
+

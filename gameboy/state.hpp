@@ -109,8 +109,12 @@ struct state_t {
     lcd_t lcd;
 
     unsigned cycles;
-    unsigned inst_cycles_wait;
+    int inst_cycles_wait;
     bool prefixed;
+
+    _reg16_t divider_counter;
+    _reg16_t timer_counter;
+    _reg8_t timer_control;
 
     unsigned rom_size;
     uint8_t *mem;

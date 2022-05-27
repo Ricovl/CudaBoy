@@ -4,8 +4,8 @@
 
 #include "instructions.hpp"
 #include "state.hpp"
-#include "config.hpp"
 #include "lcd_ctrl.hpp"
+#include "config.hpp"
 
 static void execute() {
     
@@ -46,11 +46,30 @@ static void print_debug(state_t &s) {
     printf("T-cycle: %d\n", s.cycles);
 }
 
+void timer_cycle(state_t &s) {
+
+    if (s.timer_counter <= 0) {
+        uint8_t tac = read_u8(s, TAC);
+        s.timer_counter = 0;
+    }
+    s.timer_counter--;
+}
+
 static void step(state_t &s) {
+    s.cycles += 1;
+
     lcd_cycle(s);
 
-    if (s.inst_cycles_wait <= 1)
+    timer_cycle(s);
+
+    s.inst_cycles_wait -= 1;
+    if (s.inst_cycles_wait <= 0)
     {
+        if (s.halt) {
+            s.inst_cycles_wait = 4;
+            return;
+        }
+
         _inst_t opcode = read_u8(s, s.pc);
         auto inst = instructions[opcode];
 
@@ -60,7 +79,7 @@ static void step(state_t &s) {
                 s.operand = read_u8(s, s.pc + 1);
             }
             else if (inst.length == 3) {
-                s.operand = read_u8(s, s.pc + 1) | read_u8(s, s.pc + 2) << 8;
+                s.operand = read_u16(s, s.pc + 1);
             }
 
             do_debug_stuff(s);
@@ -78,19 +97,12 @@ static void step(state_t &s) {
                 s.pc++;
                 s.prefixed = false;
             }
-
-
-            s.num_inst++;
         }
         else {
             std::cout << "Error: instruction not implemented" << opcode << "\n";
             s.halt = true;
         }
     }
-    else {
-        s.inst_cycles_wait -= 1;
-    }
-    s.cycles += 1;
 }
 
 static void initialize_state(state_t* &s, uint8_t *rom) {

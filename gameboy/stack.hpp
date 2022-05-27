@@ -1,7 +1,6 @@
 #pragma once
 
 #include "state.hpp"
-#include "mem.hpp"
 
 #define STACK_START 0xfffe
 

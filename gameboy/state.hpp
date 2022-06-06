@@ -45,9 +45,9 @@ enum
 
 struct registers_t {
     union {
-        struct __attribute__((__packed__)) {
+        struct alignas(1) {
             union {
-                struct __attribute__((__packed__))
+                struct alignas(1)
                 {
                     _reg8_t und : 4;
                     _reg8_t carry : 1;
@@ -114,7 +114,8 @@ struct state_t {
 
     _reg16_t divider_counter;
     _reg16_t timer_counter;
-    _reg8_t timer_control;
+    _reg16_t timer_tac;
+    bool timer_enable;
 
     unsigned rom_size;
     uint8_t *mem;

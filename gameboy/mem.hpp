@@ -43,19 +43,22 @@ static uint8_t read_u8(state_t &s, _reg16_t ptr) {
     {
         case P1:
             return 0xff;
-        case DIV:
-            return s.divider_counter;
             break;
-        case TIMA:
-            return s.timer_counter;
+        case LCDC:
+            printf("reading lcdc\n");
             break;
         case LY: // LCDC (lcd control register)
+            // printf("reading ly\n");
             return s.lcd.ly;
             // return 0x90;
             break;
 
         default:
             break;
+    }
+
+    if (ptr >= 0xfea0 && ptr <= 0xfeff) {
+        return 0xff;
     }
 
     return s.mem[ptr];
@@ -66,6 +69,12 @@ static uint16_t read_u16(state_t &s, _reg16_t ptr) {
 }
 
 static void write_u8(state_t &s, _reg16_t ptr, uint8_t n) {
+    uint16_t tac_values[] = {1024, 16, 64, 256};
+    uint16_t dest;
+
+    if (ptr < 0x8000)
+        return;
+
     switch (ptr)
     {
     case 0xff02:
@@ -80,7 +89,9 @@ static void write_u8(state_t &s, _reg16_t ptr, uint8_t n) {
         n = 0;
         break;
     case TAC:
-        s.timer_control = n;
+        s.timer_tac = tac_values[n & 3];
+        s.timer_enable = (n >> 2) & 1;
+        // printf("timer enable: %d at speed %d\n", s.timer_enable, s.timer_tac);
         break;
     case LCDC:
         lcd_control_set(s, n);
@@ -96,8 +107,30 @@ static void write_u8(state_t &s, _reg16_t ptr, uint8_t n) {
         if (n & (1 << 2)) {
             printf("Timer ");
         }
+        printf("ie: %d ", s.interrupts_enabled);
         printf("\n");
         break;
+    case IF:
+        // if (s.interrupts_enabled) {
+        //     printf("triggered interrupt: \n");
+        //     if (n & (1 << 0)) {
+        //         printf("Vblank ");
+        //     }
+        //     if (n & (1 << 1)) {
+        //         printf("LCD_stat ");
+        //     }
+        //     if (n & (1 << 2)) {
+        //         printf("Timer ");
+        //     }
+        //     printf("ie: %d ", s.interrupts_enabled);
+        //     printf("\n");
+        // }
+        break;
+    case DMA:
+        // printf("dma transfer request!!!\n");
+        dest = ((n & 0x00ff) << 8);
+        memcpy(&s.mem[0xfe00], &s.mem[dest], 0xfe9f - 0xfe00);
+
     default:
         break;
     }

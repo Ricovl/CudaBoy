@@ -11,8 +11,8 @@
 #define ROM_RAM_SIZE_OFFSET 0x149
 
 int load_rom(uint8_t **buf) {
-    std::ifstream file("/home/rico/Documents/gameboy/games/tetris.gb");
-    // std::ifstream file("/home/rico/Documents/gameboy/games/10-bitops.gb");
+    std::ifstream file("/home/rico/Documents/programming/gameboy/games/tetris.gb");
+    // std::ifstream file("/home/rico/Documents/programming/gameboy/games/drmario.gb");
 
     if (!file) {
         printf("Error opening rom file!\n");

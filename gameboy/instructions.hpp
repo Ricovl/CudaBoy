@@ -154,6 +154,7 @@ inline void _di(state_t &s) {
 
 inline void _ei(state_t &s) {
     s.interrupts_enabled = true;
+    // printf("interrupts enabled!\n");
 }
 
 // Rotate & Shifts instructions
@@ -821,7 +822,10 @@ void ld_hlp_h(state_t &s) { write_u8(s, s.regs.hl, s.regs.h); }
 void ld_hlp_l(state_t &s) { write_u8(s, s.regs.hl, s.regs.l); }
 
 // 0x76
-void halt(state_t &s) { s.halt = true; }
+void halt(state_t &s) { 
+    s.halt = true;
+    // printf("halted! ei: %d, if: %d\n", s.interrupts_enabled, read_u8(s, IE));
+}
 
 // 0x77
 void ld_hlp_a(state_t &s) { write_u8(s, s.regs.hl, s.regs.a); }

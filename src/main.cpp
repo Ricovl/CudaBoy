@@ -38,14 +38,14 @@ int main(int argc, const char* argv[])
     bool wait_refresh = false;
     while (!quit)
     {
-        auto now = Clock::now();
-        auto delta = std::chrono::duration_cast<std::chrono::nanoseconds>(now - prevTime).count();
+        // auto now = Clock::now();
+        // auto delta = std::chrono::duration_cast<std::chrono::nanoseconds>(now - prevTime).count();
         // if (delta > 239) {
-            // if (!gb_state->halt) {
-            //     step(*gb_state);
-            // }
+        //     if (!gb_state->halt) {
+        //         step(*gb_state);
+        //     }
         // }
-        if (!gb_state->halt && !wait_refresh) {
+        if (!gb_state->stop && !wait_refresh) {
             step(*gb_state);
         }
         if (gb_state->lcd.mode == 1 && prev_lcd_mode == 0) {

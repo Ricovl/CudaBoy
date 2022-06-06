@@ -6,6 +6,7 @@
 #include "state.hpp"
 #include "lcd_ctrl.hpp"
 #include "config.hpp"
+#include "interrupts.hpp"
 
 static void execute() {
     
@@ -13,8 +14,8 @@ static void execute() {
 
 static void do_debug_stuff(state_t &s) {
             // printf("pc: %04x, %02x(%02x%02x)\n", s.pc, read_u8(s, s.pc), read_u8(s, s.pc + 1), read_u8(s, s.pc + 2));
-            // printf("A: %02X F: %02X B: %02X C: %02X D: %02X E: %02X H: %02X L: %02X SP: %02X PC: 00:%04X (%02X %02X %02X %02X)\n", 
-            // s.regs.a, s.regs.f, s.regs.b, s.regs.c, s.regs.d, s.regs.e, s.regs.h, s.regs.l, s.regs.sp, s.pc, read_u8(s, s.pc), read_u8(s, s.pc + 1), read_u8(s, s.pc + 2), read_u8(s, s.pc + 3));
+            printf("A: %02X F: %02X B: %02X C: %02X D: %02X E: %02X H: %02X L: %02X SP: %02X PC: 00:%04X (%02X %02X %02X %02X)\n", 
+            s.regs.a, s.regs.f, s.regs.b, s.regs.c, s.regs.d, s.regs.e, s.regs.h, s.regs.l, s.regs.sp, s.pc, read_u8(s, s.pc), read_u8(s, s.pc + 1), read_u8(s, s.pc + 2), read_u8(s, s.pc + 3));
 
 #if DEBUG
             if (s.pc == 0xcaf6) // runs okay till at least caf6 some screen stuff happens here.
@@ -47,20 +48,40 @@ static void print_debug(state_t &s) {
 }
 
 void timer_cycle(state_t &s) {
-
-    if (s.timer_counter <= 0) {
-        uint8_t tac = read_u8(s, TAC);
-        s.timer_counter = 0;
+    s.divider_counter += 1;
+    if (s.divider_counter >= 256) {
+        s.divider_counter -= 256;
+        uint8_t div = read_u8(s, DIV);
+        div += 1;
+        write_u8(s, DIV, div);
     }
-    s.timer_counter--;
+
+    if (s.timer_enable) {
+        s.timer_counter += 1;
+        if (s.timer_counter >= s.timer_tac)
+        {
+            s.timer_counter = 0;
+
+            uint8_t tima = read_u8(s, TIMA);
+            tima += 1;
+            // printf("tima: %d\n", tima);
+            if (tima == 0) {
+                tima = read_u8(s, TMA);
+                // printf("triggering timer interrupt\n");
+                interrupt_trigger(s, Int::TIMER);
+            }
+            write_u8(s, TIMA, tima);
+        }
+    }
 }
 
 static void step(state_t &s) {
     s.cycles += 1;
 
     lcd_cycle(s);
-
     timer_cycle(s);
+
+    interrupts_handle(s);
 
     s.inst_cycles_wait -= 1;
     if (s.inst_cycles_wait <= 0)
@@ -82,7 +103,7 @@ static void step(state_t &s) {
                 s.operand = read_u16(s, s.pc + 1);
             }
 
-            do_debug_stuff(s);
+            // do_debug_stuff(s);
 
             s.pc += inst.length;
             s.inst_cycles_wait = inst.cycles;
@@ -99,8 +120,8 @@ static void step(state_t &s) {
             }
         }
         else {
-            std::cout << "Error: instruction not implemented" << opcode << "\n";
-            s.halt = true;
+            printf("Error: Instruction not implemented: %02x\n", opcode);
+            s.stop = true;
         }
     }
 }
@@ -121,6 +142,8 @@ static void initialize_state(state_t* &s, uint8_t *rom) {
     s->prefixed = false;
     s->rom_size = (1<<15) << rom[0x0148];
     s->mem = (uint8_t *)malloc(0x10000);
+
+    s->timer_tac = 1024;
     memcpy(s->mem, rom, s->rom_size);
 
     memset(&s->regs, 0, sizeof(register_t));
